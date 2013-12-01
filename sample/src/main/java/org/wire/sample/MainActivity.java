@@ -15,15 +15,32 @@ import org.wire.Wire;
 
 public class MainActivity extends ActionBarActivity {
 
+    private Wire wire;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Wire.with(this).from()
-
+        wire = Wire.with(this).from(SampleService.class).to(this);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        wire.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        wire.disconnect();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

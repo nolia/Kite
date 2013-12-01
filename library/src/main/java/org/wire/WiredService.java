@@ -40,6 +40,8 @@ public abstract class WiredService extends Service {
 
     private void init() {
         // TODO collect @Provided annotated members
+
+
     }
 
 }
