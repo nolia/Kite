@@ -14,4 +14,8 @@ public class WireBinder extends Binder {
     public WireBinder(WiredService wiredService) {
         service = wiredService;
     }
+
+    public WiredService getService() {
+        return service;
+    }
 }

@@ -10,17 +10,32 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.Toast;
 
 import org.wire.Wire;
+import org.wire.Wired;
 
 public class MainActivity extends ActionBarActivity {
 
     private Wire wire;
 
+    @Wired
+    public CalcInterface calculator;
+
+    private View.OnClickListener mButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            int five = calculator.add(2, 3);
+            Toast.makeText(MainActivity.this, String.valueOf(five), Toast.LENGTH_SHORT).show();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        findViewById(R.id.btn_add_add_sync)
+            .setOnClickListener(mButtonListener);
 
         wire = Wire.with(this).from(SampleService.class).to(this);
     }

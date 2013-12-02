@@ -1,10 +1,16 @@
 package org.wire;
 
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Main class for providing service connection
@@ -16,16 +22,22 @@ public class Wire {
 
     private Context context;
     private Object target;
-    private Class<? extends WiredService> service;
+    private Class<? extends Service> service;
 
     private WireCallback callback;
     private WireBinder wireBinder;
 
+    private boolean toInject = true;
+
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            // TODO check if service is WireService
             wireBinder = (WireBinder) service;
-
+            serviceInstance = wireBinder.getService();
+            if (toInject){
+                fillInjection();
+            }
             if (callback != null){
                 callback.onConnect();
             }
@@ -38,7 +50,28 @@ public class Wire {
             }
         }
     };
+
     private Intent serviceIntent;
+    private Map<Class<?>, Field> injectionMap;
+    private Map<Class<?>, Method> interfaceMap;
+    private WiredService serviceInstance;
+
+    private void fillInjection() {
+        for (Class<?> injectedType : injectionMap.keySet()){
+            if (interfaceMap.containsKey(injectedType)){
+                Method method = interfaceMap.get(injectedType);
+                try {
+                    method.setAccessible(true);
+                    Object value = method.invoke(serviceInstance);
+                    Field field = injectionMap.get(injectedType);
+                    field.setAccessible(true);
+                    field.set(target, value);
+                } catch (IllegalAccessException e) {
+                } catch (InvocationTargetException e) {
+                }
+            }
+        }
+    }
 
     // builders
     // TODO consider using builder class
@@ -59,6 +92,11 @@ public class Wire {
 
     public Wire intent(Intent serviceIntent){
         this.serviceIntent = serviceIntent;
+        return this;
+    }
+
+    public Wire noInection(){
+        this.toInject = false;
         return this;
     }
 
@@ -85,9 +123,11 @@ public class Wire {
 
     void setTarget(Object target) {
         this.target = target;
+        this.injectionMap = InterfaceFinder.findAllWired(target.getClass());
     }
 
-    void setService(Class<? extends WiredService> service) {
+    void setService(Class<? extends Service> service) {
         this.service = service;
+        this.interfaceMap = InterfaceFinder.findAllProvided(service);
     }
 }

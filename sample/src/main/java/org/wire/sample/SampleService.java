@@ -1,9 +1,6 @@
 package org.wire.sample;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-
+import org.wire.Provided;
 import org.wire.WiredService;
 
 /**
@@ -13,9 +10,20 @@ import org.wire.WiredService;
  */
 public class SampleService extends WiredService {
 
+    private CalcInterface calculator;
+
     public SampleService() {
         super("SampleService");
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        calculator = new Calculator();
+    }
 
+    @Provided
+    public CalcInterface getCalculator(){
+        return this.calculator;
+    }
 }
