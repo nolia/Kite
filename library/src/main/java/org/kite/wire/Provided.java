@@ -1,4 +1,4 @@
-package org.wire;
+package org.kite.wire;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  *
  * @author Nikolay Soroka
  */
-@Target({ElementType.FIELD}) // TODO add getter target
+@Target({ElementType.METHOD}) // TODO add field type
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Wired {
+public @interface Provided {
 }

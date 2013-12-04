@@ -1,4 +1,4 @@
-package org.wire;
+package org.kite.wire;
 
 import android.app.Service;
 import android.content.Intent;

@@ -1,21 +1,16 @@
-package org.wire.sample;
+package org.kite.sample;
 
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
+import android.app.Activity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
 import android.widget.Toast;
 
-import org.wire.Wire;
-import org.wire.Wired;
+import org.kite.wire.Wire;
+import org.kite.wire.Wired;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private Wire wire;
 

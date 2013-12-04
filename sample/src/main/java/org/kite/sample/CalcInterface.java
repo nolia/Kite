@@ -1,4 +1,4 @@
-package org.wire.sample;
+package org.kite.sample;
 
 /**
  * TODO

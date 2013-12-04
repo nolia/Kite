@@ -1,7 +1,8 @@
-package org.wire.sample;
+package org.kite.sample;
 
-import org.wire.Provided;
-import org.wire.WiredService;
+
+import org.kite.wire.Provided;
+import org.kite.wire.WiredService;
 
 /**
  * TODO
@@ -23,7 +24,7 @@ public class SampleService extends WiredService {
     }
 
     @Provided
-    public CalcInterface getCalculator(){
+    public CalcInterface getCalculator() {
         return this.calculator;
     }
 }
