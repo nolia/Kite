@@ -25,4 +25,16 @@ android {
         proguardFile 'proguard-rules.txt'
         proguardFile getDefaultProguardFile('proguard-android-optimize.txt')
     }
+
+    sourceSets {
+        main  {
+            java {
+                srcDir 'src/main/java'
+            }
+        }
+    }
+}
+
+task jar(type: Jar){
+    from android.sourceSets.main.java
 }

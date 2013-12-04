@@ -1,7 +1,7 @@
 package org.kite.sample;
 
 
-import org.kite.wire.Provided;
+import org.kite.annotations.Provided;
 import org.kite.wire.WiredService;
 
 /**

@@ -8,4 +8,6 @@ package org.kite.sample;
 public interface CalcInterface {
 
     public int add(int first, int second);
+
+    public int addAsync(int first, int second, long delay);
 }

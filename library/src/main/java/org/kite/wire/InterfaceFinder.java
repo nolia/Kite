@@ -2,6 +2,9 @@ package org.kite.wire;
 
 import android.app.Service;
 
+import org.kite.annotations.Provided;
+import org.kite.annotations.Wired;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -19,10 +22,6 @@ public class InterfaceFinder {
         for (Method method : declaredMethods){
             Provided provided = method.getAnnotation(Provided.class);
             if (provided != null){
-                // if accessible
-//                if (!method.isAccessible()){
-//                    throw new IllegalArgumentException("Method " + method + " is not accessible");
-//                }
                 // check if method has no params
                 if (method.getParameterTypes().length != 0){
                     throw new IllegalArgumentException("Method " + method + " must have no parameters");

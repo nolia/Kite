@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import org.kite.wire.Wire;
-import org.kite.wire.Wired;
+import org.kite.annotations.Wired;
 
 public class MainActivity extends Activity {
 
