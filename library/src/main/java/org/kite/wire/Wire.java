@@ -8,9 +8,13 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Main class for providing service connection
@@ -55,6 +59,7 @@ public class Wire {
     private Map<Class<?>, Field> injectionMap;
     private Map<Class<?>, Method> interfaceMap;
     private WiredService serviceInstance;
+    private Set<Class<?>> asyncInterfaceSet = new HashSet<Class<?>>();
 
     private void fillInjection() {
         for (Class<?> injectedType : injectionMap.keySet()){
@@ -63,6 +68,7 @@ public class Wire {
                 try {
                     method.setAccessible(true);
                     Object value = method.invoke(serviceInstance);
+                    // interface has async methods - wrap it
                     Field field = injectionMap.get(injectedType);
                     field.setAccessible(true);
                     field.set(target, value);
@@ -128,6 +134,8 @@ public class Wire {
 
     void setService(Class<? extends Service> service) {
         this.service = service;
+        this.asyncInterfaceSet.clear();
         this.interfaceMap = InterfaceFinder.findAllProvided(service);
+
     }
 }
