@@ -7,9 +7,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
-import android.widget.Toast;
-
-import java.lang.reflect.Method;
 
 /**
  * TODO
@@ -23,10 +20,13 @@ public class RemoteService extends Service {
 
     private class IncomingHandler extends Handler {
 
-
         @Override
         public void handleMessage(Message msg) {
             Log.d(TAG, "handled: " + msg.toString());
+            if (msg.what == Remote.CODE_EXECUTE_COMMAND){
+                Command command = (Command) msg.obj;
+                Log.d(TAG, "Executing command : " + command);
+            }
             super.handleMessage(msg);
         }
     }

@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 
 /**
  * TODO
@@ -13,6 +15,8 @@ import android.os.Messenger;
  * @author Nikolay Soroka
  */
 public class Remote {
+
+    public static final int CODE_EXECUTE_COMMAND = 0x101;
 
     public static interface Callback {
         void onConnected(Remote remote);
@@ -61,6 +65,21 @@ public class Remote {
     public Remote callback(Callback callback){
         this.callback = callback;
         return this;
+    }
+
+    public void postCommand(Command command){
+        if (command == null){
+            throw new IllegalArgumentException("Command must not be null");
+        }
+        Message msg = Message.obtain();
+        msg.what = CODE_EXECUTE_COMMAND;
+        msg.obj = command;
+        msg.replyTo = serviceMessenger;
+        try {
+            serviceMessenger.send(msg);
+        } catch (RemoteException e) {
+            // FIXME handle exception
+        }
     }
 
     public void connect(){
