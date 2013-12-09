@@ -26,7 +26,7 @@ public class Wire {
 
     private Context context;
     private Object target;
-    private Class<? extends Service> service;
+    private Class<? extends WiredService> service;
 
     private WireCallback callback;
     private WireBinder wireBinder;
@@ -132,7 +132,7 @@ public class Wire {
         this.injectionMap = InterfaceFinder.findAllWired(target.getClass());
     }
 
-    void setService(Class<? extends Service> service) {
+    void setService(Class<? extends WiredService> service) {
         this.service = service;
         this.asyncInterfaceSet.clear();
         this.interfaceMap = InterfaceFinder.findAllProvided(service);
