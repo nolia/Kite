@@ -132,7 +132,7 @@ public class Wire {
     void setService(Class<? extends WiredService> service) {
         this.service = service;
         this.asyncInterfaceSet.clear();
-        this.interfaceMap = InterfaceFinder.findAllProvided(service);
+        this.interfaceMap = InterfaceFinder.findAllProvidedMethods(service);
 
     }
 }
