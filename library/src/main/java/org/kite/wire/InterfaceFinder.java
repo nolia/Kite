@@ -36,30 +36,6 @@ class InterfaceFinder {
         return result;
     }
 
-    private static boolean hasAsyncMethods(Class<?> clazz) {
-        Method[] declaredMethods = clazz.getDeclaredMethods();
-        for (Method method : declaredMethods) {
-            if (method.getAnnotation(RemoteMethod.class) != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static void getAsyncMethods(Class<?> clazz, SparseArray<Method> asyncMethodsMap) {
-        Method[] declaredMethods = clazz.getDeclaredMethods();
-        for (Method method : declaredMethods) {
-            RemoteMethod asyncAnnotation = method.getAnnotation(RemoteMethod.class);
-            if (asyncAnnotation != null) {
-                int code = asyncAnnotation.code();
-                if (asyncMethodsMap.get(code) != null) {
-                    throw new IllegalArgumentException("RemoteMethod method codes must be unique");
-                }
-                asyncMethodsMap.put(code, method);
-            }
-        }
-    }
-
     public static Map<Class<?>, Field> findAllWired(Class<?> target) {
         Map<Class<?>, Field> result = new HashMap<Class<?>, Field>();
         Field[] declaredFields = target.getDeclaredFields();
