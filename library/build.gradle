@@ -35,6 +35,16 @@ android {
     }
 }
 
-task jar(type: Jar){
-    from android.sourceSets.main.java
+task clearJar(type: Delete) {
+    delete 'build/jar_out/Kite.jar'
 }
+
+task makeJar(type: Copy) {
+    from('build/bundles/release/')
+    into('build/jar_out/')
+    include('classes.jar')
+    rename ('classes.jar', 'Kite.jar')
+}
+
+makeJar.dependsOn(clearJar, build)
+

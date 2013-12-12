@@ -39,8 +39,8 @@ public class CalcFragment extends Fragment {
         Intent serviceIntent = new Intent(getActivity(), SampleService.class)
                 .setAction(SampleService.ACTION_BIND_SUBSTRACTOR)
                 ;
-        wire = Wire.with(getActivity()).from(serviceIntent)
-
+        wire = Wire.with(getActivity())
+                .from(serviceIntent)
                 .to(this);
     }
 
