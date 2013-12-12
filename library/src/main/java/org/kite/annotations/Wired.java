@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Filed with this annotation will be filled
+ * Fields with this annotation will be filled
  * whet service is connected.
  *
  * @see org.kite.wire.Wire
