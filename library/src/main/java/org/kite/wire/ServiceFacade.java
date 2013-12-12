@@ -1,6 +1,7 @@
 package org.kite.wire;
 
 import android.app.Service;
+import android.util.Log;
 
 import org.kite.annotations.Provided;
 
@@ -17,6 +18,8 @@ import java.util.Map;
  */
 public class ServiceFacade {
 
+    private static final String TAG = "ServiceFacade";
+
     public static ServiceFacade build(Class<? extends Service> service, Scope scope, String action) {
         ServiceFacade serviceFacade = new ServiceFacade();
         // check all methods
@@ -25,7 +28,7 @@ public class ServiceFacade {
             Method method = allMethods.get(key);
             // findAllProvidedMethods insures that method has provided annotation
             Provided provided = method.getAnnotation(Provided.class);
-            if (sutisfies(provided, scope, action)){
+            if (satisfies(provided, scope, action)){
                 putOrThrow(serviceFacade, key, method);
             }
         }
@@ -34,7 +37,7 @@ public class ServiceFacade {
         for (Class<?> key : allFields.keySet()) {
             Field field = allFields.get(key);
             Provided provided = field.getAnnotation(Provided.class);
-            if (sutisfies(provided, scope, action)){
+            if (satisfies(provided, scope, action)){
                 putOrThrow(serviceFacade, key, field);
             }
         }
@@ -42,14 +45,16 @@ public class ServiceFacade {
         return serviceFacade;
     }
 
-    private static boolean sutisfies(Provided provided, Scope neededScope, String neededAction){
+    private static boolean satisfies(Provided provided, Scope neededScope, String neededAction){
         Scope declaredScope = provided.scope();
         String declaredAction = provided.action();
         boolean forAll = Scope.ALL.equals(declaredScope);
+        boolean forDefault = Scope.DEFAULT.equals(neededScope)
+                && Scope.DEFAULT.equals(declaredScope);
         boolean forAction = (Scope.ACTION.equals(neededScope)
                 && Scope.ACTION.equals(declaredScope)
                 && declaredAction.equals(neededAction));
-        return forAll || forAction;
+        return forAll || forDefault || forAction;
 
     }
 
@@ -93,7 +98,9 @@ public class ServiceFacade {
                 value = field.get(instance);
             }
         } catch (IllegalAccessException e) {
+            Log.e(TAG, "Can't access ", e);
         } catch (InvocationTargetException e) {
+            Log.e(TAG, "Can't invoke ", e);
         }
         return value;
     }

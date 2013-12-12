@@ -6,11 +6,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,27 +48,16 @@ public class Wire {
     };
 
     private Intent serviceIntent;
-    private Map<Class<?>, Field> injectionMap;
-    private Map<Class<?>, Method> interfaceMap;
     private WiredService serviceInstance;
     private ServiceFacade serviceFacade;
     private ClientFacade clientFacade;
 
     private void fillInjection() {
-        for (Class<?> injectedType : injectionMap.keySet()){
-            if (interfaceMap.containsKey(injectedType)){
-                Method method = interfaceMap.get(injectedType);
-                try {
-                    method.setAccessible(true);
-                    Object value = method.invoke(serviceInstance);
-                    // interface has async methods - wrap it
-                    Field field = injectionMap.get(injectedType);
-                    field.setAccessible(true);
-                    field.set(target, value);
-                } catch (IllegalAccessException e) {
-                } catch (InvocationTargetException e) {
-                }
-            }
+        Set<Class<?>> wiredClasses = clientFacade.getWiredClasses();
+        for (Class<?> key : wiredClasses){
+            Object value = serviceFacade.getValue(key, serviceInstance);
+            // TODO perform wrap on async
+            clientFacade.fillWith(target, key, value);
         }
     }
 
@@ -146,7 +130,10 @@ public class Wire {
     void setTarget(Object target) {
         this.target = target;
         this.clientFacade = ClientFacade.build(target.getClass());
-        this.injectionMap = InterfaceFinder.findAllWired(target.getClass());
+    }
+
+    public ServiceFacade getServiceFacade(){
+        return this.serviceFacade;
     }
 
     void setService(Class<? extends WiredService> service) {
