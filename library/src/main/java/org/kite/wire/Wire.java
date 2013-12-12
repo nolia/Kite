@@ -56,7 +56,8 @@ public class Wire {
     private Map<Class<?>, Field> injectionMap;
     private Map<Class<?>, Method> interfaceMap;
     private WiredService serviceInstance;
-    private Set<Class<?>> asyncInterfaceSet = new HashSet<Class<?>>();
+    private ServiceFacade serviceFacade;
+    private ClientFacade clientFacade;
 
     private void fillInjection() {
         for (Class<?> injectedType : injectionMap.keySet()){
@@ -106,7 +107,25 @@ public class Wire {
     // lifecycle
 
     public void connect(){
-        context.bindService(getServiceIntent(), connection, Context.BIND_AUTO_CREATE);
+        Intent serviceIntent = getServiceIntent();
+        buildFacadeIfNeeded(serviceIntent);
+        context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void buildFacadeIfNeeded(Intent serviceIntent) {
+        if (serviceFacade != null){
+            return;
+        }
+        String intentAction = serviceIntent.getAction();
+        Scope scope;
+        String action = null;
+        if (intentAction != null){
+            scope = Scope.ACTION;
+            action = intentAction;
+        } else {
+            scope = Scope.DEFAULT;
+        }
+        this.serviceFacade = ServiceFacade.build(service, scope, action);
     }
 
     private Intent getServiceIntent() {
@@ -126,13 +145,11 @@ public class Wire {
 
     void setTarget(Object target) {
         this.target = target;
+        this.clientFacade = ClientFacade.build(target.getClass());
         this.injectionMap = InterfaceFinder.findAllWired(target.getClass());
     }
 
     void setService(Class<? extends WiredService> service) {
         this.service = service;
-        this.asyncInterfaceSet.clear();
-        this.interfaceMap = InterfaceFinder.findAllProvidedMethods(service);
-
     }
 }
