@@ -4,10 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**WiredService is a provider of dependencies via {@link org.kite.annotations.Provided}
  * annotated methods and fields. All provided dependencies must be unique by class for
  * specified scope. {@code WiredService} is just an abstract {@link android.app.Service} that

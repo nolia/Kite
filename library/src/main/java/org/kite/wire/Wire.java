@@ -80,7 +80,7 @@ public class Wire {
      *
      * @return this {@code Wire} instance
      */
-    public Wire noInection() {
+    public Wire noInjection() {
         this.toInject = false;
         return this;
     }
@@ -103,7 +103,7 @@ public class Wire {
      * also want to use advantage of {@link org.kite.wire.WiredService} and
      * {@link org.kite.annotations.Provided} annotations.
      *
-     * @see #noInection()
+     * @see #noInjection()
      * @return {@link ServiceFacade} associated with service, which is
      * connected.
      */

@@ -1,9 +1,7 @@
 package org.kite.wire;
 
 import android.app.Service;
-import android.util.SparseArray;
 
-import org.kite.annotations.RemoteMethod;
 import org.kite.annotations.Provided;
 import org.kite.annotations.Wired;
 

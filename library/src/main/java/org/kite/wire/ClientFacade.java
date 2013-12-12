@@ -13,7 +13,7 @@ class ClientFacade {
 
     private Map<Class<?>, Field> wired;
 
-    public static ClientFacade build(Class<? extends Object> targetClass) {
+    public static ClientFacade build(Class<?> targetClass) {
         ClientFacade clientFacade = new ClientFacade();
         clientFacade.wired = InterfaceFinder.findAllWired(targetClass);
 
@@ -31,7 +31,7 @@ class ClientFacade {
             try {
                 field.set(clientInstance, value);
             } catch (IllegalAccessException e) {
-
+                // log this out
             }
         }
 
