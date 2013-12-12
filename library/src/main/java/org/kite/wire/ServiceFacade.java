@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO
+ * Encapsulates all provided fields and methods by {@link org.kite.wire.WiredService}
+ * with {@link org.kite.annotations.Provided} annotation.
  *
  * @author Nikolay Soroka
  */
@@ -20,7 +21,14 @@ public class ServiceFacade {
 
     private static final String TAG = "ServiceFacade";
 
-    public static ServiceFacade build(Class<? extends Service> service, Scope scope, String action) {
+    /**Constructs new {@code ServiceFacade} upon given service, scope and intent action.
+     *
+     * @param service
+     * @param scope
+     * @param action
+     * @return new {@code ServiceFacade} built upon given service, scope and intent action.
+     */
+    public static ServiceFacade build(Class<? extends Service> service, Provided.Scope scope, String action) {
         ServiceFacade serviceFacade = new ServiceFacade();
         // check all methods
         Map<Class<?>, Method> allMethods = InterfaceFinder.findAllProvidedMethods(service);
@@ -45,14 +53,43 @@ public class ServiceFacade {
         return serviceFacade;
     }
 
-    private static boolean satisfies(Provided provided, Scope neededScope, String neededAction){
-        Scope declaredScope = provided.scope();
+    /**Returns the provided value of given {@code type} from given
+     * {@code instance} to use in injection.
+     *
+     * @param type
+     * @param instance
+     * @return the value of given {@code type} from given
+     * {@code instance}.
+     */
+    public Object getValue(Class<?> type, Object instance) {
+        Object value = null;
+        try {
+            if (methods.containsKey(type)) {
+                Method method = methods.get(type);
+
+                method.setAccessible(true);
+                value = method.invoke(instance);
+            } else if (fields.containsKey(type)) {
+                Field field = fields.get(type);
+                field.setAccessible(true);
+                value = field.get(instance);
+            }
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "Can't access ", e);
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "Can't invoke ", e);
+        }
+        return value;
+    }
+
+    private static boolean satisfies(Provided provided, Provided.Scope neededScope, String neededAction){
+        Provided.Scope declaredScope = provided.scope();
         String declaredAction = provided.action();
-        boolean forAll = Scope.ALL.equals(declaredScope);
-        boolean forDefault = Scope.DEFAULT.equals(neededScope)
-                && Scope.DEFAULT.equals(declaredScope);
-        boolean forAction = (Scope.ACTION.equals(neededScope)
-                && Scope.ACTION.equals(declaredScope)
+        boolean forAll = Provided.Scope.ALL.equals(declaredScope);
+        boolean forDefault = Provided.Scope.DEFAULT.equals(neededScope)
+                && Provided.Scope.DEFAULT.equals(declaredScope);
+        boolean forAction = (Provided.Scope.ACTION.equals(neededScope)
+                && Provided.Scope.ACTION.equals(declaredScope)
                 && declaredAction.equals(neededAction));
         return forAll || forDefault || forAction;
 
@@ -82,27 +119,6 @@ public class ServiceFacade {
 
     private boolean contains(Class<?> key) {
         return methods.containsKey(key) || fields.containsKey(key);
-    }
-
-    public Object getValue(Class<?> type, Object instance) {
-        Object value = null;
-        try {
-            if (methods.containsKey(type)) {
-                Method method = methods.get(type);
-
-                method.setAccessible(true);
-                value = method.invoke(instance);
-            } else if (fields.containsKey(type)) {
-                Field field = fields.get(type);
-                field.setAccessible(true);
-                value = field.get(instance);
-            }
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "Can't access ", e);
-        } catch (InvocationTargetException e) {
-            Log.e(TAG, "Can't invoke ", e);
-        }
-        return value;
     }
 
     private Map<Class<?>, Method> methods = new HashMap<Class<?>, Method>();

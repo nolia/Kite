@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO
+ * Helpers for finding annotated members.
  *
  * @author Nikolay Soroka
  */

@@ -2,7 +2,6 @@ package org.kite.sample;
 
 
 import org.kite.annotations.Provided;
-import org.kite.wire.Scope;
 import org.kite.wire.WiredService;
 
 /**
@@ -23,7 +22,7 @@ public class SampleService extends WiredService {
         calculator = new Calculator();
     }
 
-    @Provided(scope = Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR)
+    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR)
     public Substractor substractor = new Substractor() {
         @Override
         public int sub(int a, int b) {

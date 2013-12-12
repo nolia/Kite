@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * TODO
+ * A helper class for injecting values.
  *
  * @author Nikolay Soroka
  */
-public class ClientFacade {
+class ClientFacade {
 
     private Map<Class<?>, Field> wired;
 
