@@ -1,7 +1,9 @@
 package org.kite.sample;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,7 +12,7 @@ import android.widget.Toast;
 import org.kite.wire.Wire;
 import org.kite.annotations.Wired;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
 
     private Wire wire;
 
@@ -21,7 +23,7 @@ public class MainActivity extends Activity {
         @Override
         public void onClick(View v) {
             int five = calculator.add(2, 3);
-            Toast.makeText(MainActivity.this, String.valueOf(five), Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, " 2 + 3 = " + five, Toast.LENGTH_SHORT).show();
         }
     };
 

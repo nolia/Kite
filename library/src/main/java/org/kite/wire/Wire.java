@@ -9,7 +9,7 @@ import android.os.IBinder;
 import java.util.Set;
 
 /**
- * Main class for providing service connection
+ * Main class for providing serviceClass connection
  * // TODO detailed javadoc
  *
  * @author Nikolay Soroka
@@ -18,7 +18,7 @@ public class Wire {
 
     private Context context;
     private Object target;
-    private Class<? extends WiredService> service;
+    private Class<? extends WiredService> serviceClass;
 
     private WireCallback callback;
     private WireBinder wireBinder;
@@ -28,9 +28,11 @@ public class Wire {
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            // TODO check if service is WireService
+
             wireBinder = (WireBinder) service;
             serviceInstance = wireBinder.getService();
+            Wire.this.serviceClass = serviceInstance.getClass();
+            buildFacadeIfNeeded(serviceIntent);
             if (toInject){
                 fillInjection();
             }
@@ -41,6 +43,9 @@ public class Wire {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            if (toInject){
+                nullify();
+            }
             if (callback != null){
                 callback.onDisconnect();
             }
@@ -48,6 +53,7 @@ public class Wire {
     };
 
     private Intent serviceIntent;
+
     private WiredService serviceInstance;
     private ServiceFacade serviceFacade;
     private ClientFacade clientFacade;
@@ -61,25 +67,31 @@ public class Wire {
         }
     }
 
+    private void nullify() {
+        for (Class key : clientFacade.getWiredClasses()){
+            clientFacade.fillWith(target, key, null);
+        }
+    }
+
     // builders
-    // TODO consider using builder class
 
     public static Wire with(Context context) {
         return new Wire(context);
     }
 
     public Wire from(Class<? extends WiredService> service) {
-        this.setService(service);
+        serviceClass = service;
+        serviceIntent = new Intent(context, service);
+        return this;
+    }
+
+    public Wire from(Intent serviceIntent) {
+        this.serviceIntent = serviceIntent;
         return this;
     }
 
     public Wire to(Object object) {
         this.setTarget(object);
-        return this;
-    }
-
-    public Wire intent(Intent serviceIntent){
-        this.serviceIntent = serviceIntent;
         return this;
     }
 
@@ -92,7 +104,6 @@ public class Wire {
 
     public void connect(){
         Intent serviceIntent = getServiceIntent();
-        buildFacadeIfNeeded(serviceIntent);
         context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
     }
 
@@ -109,12 +120,12 @@ public class Wire {
         } else {
             scope = Scope.DEFAULT;
         }
-        this.serviceFacade = ServiceFacade.build(service, scope, action);
+        this.serviceFacade = ServiceFacade.build(serviceClass, scope, action);
     }
 
     private Intent getServiceIntent() {
         if (serviceIntent == null){
-            serviceIntent = new Intent(context, service);
+            serviceIntent = new Intent(context, serviceClass);
         }
         return serviceIntent;
     }
@@ -127,7 +138,7 @@ public class Wire {
         this.context = context;
     }
 
-    void setTarget(Object target) {
+    private void setTarget(Object target) {
         this.target = target;
         this.clientFacade = ClientFacade.build(target.getClass());
     }
@@ -136,7 +147,5 @@ public class Wire {
         return this.serviceFacade;
     }
 
-    void setService(Class<? extends WiredService> service) {
-        this.service = service;
-    }
+
 }
