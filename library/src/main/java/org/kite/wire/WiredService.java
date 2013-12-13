@@ -4,6 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import org.kite.services.CommandService;
+
 /**WiredService is a provider of dependencies via {@link org.kite.annotations.Provided}
  * annotated methods and fields. All provided dependencies must be unique by class for
  * specified scope. {@code WiredService} is just an abstract {@link android.app.Service} that
@@ -18,7 +20,7 @@ import android.os.IBinder;
  * @see org.kite.annotations.Wired
  * @author Nikolay Soroka
  */
-public abstract class WiredService extends Service {
+public abstract class WiredService extends CommandService {
 
     private final String serviceName;
     private WireBinder mBinder;
