@@ -5,9 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
 
 import org.kite.annotations.Provided;
+import org.kite.async.AsyncHandler;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 
 /**
@@ -21,6 +25,8 @@ import java.util.Set;
  * @author Nikolay Soroka
  */
 public class Wire {
+
+    private static final String TAG = "Wire";
 
     // builders
 
@@ -162,6 +168,7 @@ public class Wire {
             scope = Provided.Scope.DEFAULT;
         }
         this.serviceFacade = ServiceFacade.build(serviceClass, scope, action);
+        this.serviceFacade.setAsyncListener(asyncListener);
     }
 
     private Intent getServiceIntent() {
@@ -196,6 +203,33 @@ public class Wire {
 
     private ClientFacade clientFacade;
 
+    private AsyncHandler.AsyncListener asyncListener = new AsyncHandler.AsyncListener() {
+        @Override
+        public void onAsyncResult(Method method, Object result) {
+            // TODO notify
+        }
+
+        @Override
+        public void onAsyncCodeResult(int code, Method method, Object result) {
+            if (clientFacade != null){
+                Method callback = clientFacade.getAsyncCallbacks().get(code);
+                try {
+                    callback.setAccessible(true);
+                    callback.invoke(target, result);
+                } catch (IllegalAccessException e) {
+                    Log.e(TAG, "Can't access", e);
+                } catch (InvocationTargetException e) {
+                    Log.e(TAG, "Can't invoke", e);
+                }
+            }
+        }
+
+        @Override
+        public void onAsyncError(Method method) {
+
+        }
+    };
+
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -203,6 +237,7 @@ public class Wire {
             serviceInstance = wireBinder.getService();
             Wire.this.serviceClass = serviceInstance.getClass();
             buildFacadeIfNeeded(serviceIntent);
+
             if (toInject) {
                 fillInjection();
             }

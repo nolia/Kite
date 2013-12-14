@@ -12,10 +12,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface AsyncMethod {
-    /**
-     * TODO
-     *
-     */
-    int value() default 0;
+public @interface AsyncResult {
+    int value();
 }
