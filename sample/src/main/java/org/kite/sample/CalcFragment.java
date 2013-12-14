@@ -20,10 +20,7 @@ public class CalcFragment extends Fragment {
     @Wired
     private Substractor substractor;
 
-    @Wired
-    private AsyncCalc asyncCalc;
-
-    @AsyncResult(AsyncCalc.ADD_RESULT)
+    @AsyncResult(Substractor.ADD_RESULT)
     public void onAdd(Integer result){
         Toast.makeText(getActivity(), " 7 + 8 = " + result, Toast.LENGTH_SHORT).show();
     }
@@ -37,7 +34,7 @@ public class CalcFragment extends Fragment {
                     Toast.makeText(getActivity(), "5 - 3 = " + two, Toast.LENGTH_SHORT).show();
                     break;
                 case R.id.btn_add_async:
-                    asyncCalc.asyncAdd(7, 8);
+                    substractor.asyncAdd(7, 8);
                     break;
             }
         }

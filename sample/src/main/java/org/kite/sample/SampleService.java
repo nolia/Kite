@@ -30,16 +30,13 @@ public class SampleService extends WiredService {
         return this.calculator;
     }
 
-    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR)
+    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR,async = AsyncType.METHODS)
     public Substractor substractor = new Substractor() {
         @Override
         public int sub(int a, int b) {
             return a - b;
         }
-    };
 
-    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR, async = AsyncType.METHODS)
-    private AsyncCalc asyncCalc = new AsyncCalc() {
         @Override
         public Integer asyncAdd(int a, int b) {
             try {
@@ -50,6 +47,7 @@ public class SampleService extends WiredService {
             return a + b;
         }
     };
+
 
     private CalcInterface calculator;
 }
