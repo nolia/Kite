@@ -6,12 +6,14 @@ import android.util.Log;
 import org.kite.annotations.Provided;
 import org.kite.async.AsyncHandler;
 import org.kite.async.AsyncType;
+import org.kite.async.ResultQueue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Encapsulates all provided fields and methods by {@link org.kite.wire.WiredService}
@@ -57,12 +59,14 @@ public class ServiceFacade {
     /**Returns the provided value of given {@code type} from given
      * {@code instance} to use in injection.
      *
+     *
      * @param type
      * @param instance
+     * @param queue
      * @return the value of given {@code type} from given
      * {@code instance}.
      */
-    public Object getValue(Class<?> type, WiredService instance) {
+    public Object getValue(Class<?> type, Executor instance, ResultQueue queue) {
         Object value = null;
         AsyncType async = null;
         try {
@@ -80,7 +84,7 @@ public class ServiceFacade {
                 return null;
             }
             if ( !AsyncType.NONE.equals(async) ){
-                value = wrapAsync(value, async, type, instance);
+                value = wrapAsync(value, async, type, instance, queue);
             }
         } catch (IllegalAccessException e) {
             Log.e(TAG, "Can't access ", e);
@@ -90,15 +94,9 @@ public class ServiceFacade {
         return value;
     }
 
-    public void setAsyncListener(AsyncHandler.AsyncListener asyncListener) {
-        this.asyncListener = asyncListener;
-    }
 
-    public AsyncHandler.AsyncListener getAsyncListener() {
-        return asyncListener;
-    }
 
-    private Object wrapAsync(Object value, AsyncType async, Class<?> type, WiredService instance) {
+    private Object wrapAsync(Object value, AsyncType async, Class<?> type, Executor instance, ResultQueue queue) {
         if (AsyncType.NONE.equals(async)){
             return value;
         }
@@ -109,7 +107,7 @@ public class ServiceFacade {
         } else if (AsyncType.METHODS.equals(async)){
             handler = AsyncHandler.wrapMethods(value, type, instance);
         }
-        handler.setListener(asyncListener);
+        handler.setResultQueue(queue);
         result = handler.getProxy();
         return result;
     }
@@ -156,8 +154,6 @@ public class ServiceFacade {
     private Map<Class<?>, Method> methods = new HashMap<Class<?>, Method>();
 
     private Map<Class<?>, Field> fields = new HashMap<Class<?>, Field>();
-
-    private AsyncHandler.AsyncListener asyncListener;
 
     private ServiceFacade() {
     }

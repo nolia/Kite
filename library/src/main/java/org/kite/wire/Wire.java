@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.Pair;
 
 import org.kite.annotations.Provided;
-import org.kite.async.AsyncHandler;
+import org.kite.async.MethodResult;
+import org.kite.async.ResultQueue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,6 +27,24 @@ import java.util.Set;
  * @author Nikolay Soroka
  */
 public class Wire {
+
+    /**
+     * TODO
+     *
+     * @author Nikolay Soroka
+     */
+    public static class ConnectionPair extends Pair<Class<? extends WiredService>, Class<?>> {
+
+        /**
+         * Constructor for a Pair.
+         *
+         * @param first  the first object in the Pair
+         * @param second the second object in the pair
+         */
+        public ConnectionPair(Class<? extends WiredService> first, Class<?> second) {
+            super(first, second);
+        }
+    }
 
     private static final String TAG = "Wire";
 
@@ -133,6 +153,7 @@ public class Wire {
      * Disconnects from current service connection.
      */
     public void disconnect() {
+        resultQueue.setListener(null);
         context.unbindService(connection);
     }
 
@@ -141,7 +162,7 @@ public class Wire {
     private void fillInjection() {
         Set<Class<?>> wiredClasses = clientFacade.getWiredClasses();
         for (Class<?> key : wiredClasses) {
-            Object value = serviceFacade.getValue(key, serviceInstance);
+            Object value = serviceFacade.getValue(key, serviceInstance, resultQueue);
             // TODO perform wrap on async
             clientFacade.fillWith(target, key, value);
         }
@@ -168,7 +189,6 @@ public class Wire {
             scope = Provided.Scope.DEFAULT;
         }
         this.serviceFacade = ServiceFacade.build(serviceClass, scope, action);
-        this.serviceFacade.setAsyncListener(asyncListener);
     }
 
     private Intent getServiceIntent() {
@@ -187,6 +207,23 @@ public class Wire {
         this.context = context;
     }
 
+    private void callbackAsync(MethodResult methodResult){
+        if (clientFacade != null && methodResult.code != 0){
+            Method callback = clientFacade.getAsyncCallbacks().get(methodResult.code);
+            if (callback == null){
+                return;
+            }
+            try {
+                callback.setAccessible(true);
+                callback.invoke(target, methodResult.result);
+            } catch (IllegalAccessException e) {
+                Log.e(TAG, "Can't access", e);
+            } catch (InvocationTargetException e) {
+                Log.e(TAG, "Can't invoke", e);
+            }
+        }
+    }
+
 
     private Context context;
     private Object target;
@@ -198,49 +235,45 @@ public class Wire {
     private boolean toInject = true;
 
     private Intent serviceIntent;
-    private WiredService serviceInstance;
-    private ServiceFacade serviceFacade;
 
+    private WiredService serviceInstance;
+    private ResultQueue resultQueue;
+
+    private ServiceFacade serviceFacade;
     private ClientFacade clientFacade;
 
-    private AsyncHandler.AsyncListener asyncListener = new AsyncHandler.AsyncListener() {
+    private ResultQueue.ResultListener resultQueueListener = new ResultQueue.ResultListener() {
         @Override
-        public void onAsyncResult(Method method, Object result) {
-            // TODO notify
-        }
-
-        @Override
-        public void onAsyncCodeResult(int code, Method method, Object result) {
-            if (clientFacade != null){
-                Method callback = clientFacade.getAsyncCallbacks().get(code);
-                try {
-                    callback.setAccessible(true);
-                    callback.invoke(target, result);
-                } catch (IllegalAccessException e) {
-                    Log.e(TAG, "Can't access", e);
-                } catch (InvocationTargetException e) {
-                    Log.e(TAG, "Can't invoke", e);
-                }
+        public void onResultAdded(ResultQueue resultQueue) {
+            MethodResult methodResult = resultQueue.peekResult();
+            if (methodResult != null){
+                callbackAsync(methodResult);
             }
         }
-
-        @Override
-        public void onAsyncError(Method method) {
-
-        }
     };
-
+    private ConnectionPair connectionPair;
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             WireBinder wireBinder = (WireBinder) service;
             serviceInstance = wireBinder.getService();
-            Wire.this.serviceClass = serviceInstance.getClass();
+            try {
+                serviceClass = (Class<? extends WiredService>) Class.forName(name.getClassName());
+            } catch (ClassNotFoundException e) {
+                Log.e(TAG, "Service class not found", e);
+            } catch (ClassCastException e){
+                final String msg = "Class is not a WiredService";
+                Log.e(TAG, msg, e);
+                throw new IllegalArgumentException(msg);
+            }
             buildFacadeIfNeeded(serviceIntent);
-
+            connectionPair = new ConnectionPair(serviceClass, target.getClass());
+            resultQueue = wireBinder.getResultQueue(connectionPair);
+            resultQueue.setListener(resultQueueListener);
             if (toInject) {
                 fillInjection();
             }
+            deliverPendingResults();
             if (callback != null) {
                 callback.onConnect(name, service);
             }
@@ -256,4 +289,14 @@ public class Wire {
             }
         }
     };
+
+    private void deliverPendingResults() {
+        if (resultQueue != null){
+            while (resultQueue.isNotEmpty()){
+                callbackAsync(resultQueue.peekResult());
+            }
+        }
+    }
+
+
 }

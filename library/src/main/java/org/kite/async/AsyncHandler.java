@@ -5,14 +5,13 @@ import android.os.Looper;
 import android.util.Log;
 
 import org.kite.annotations.AsyncMethod;
-import org.kite.services.CommandService;
-import org.kite.wire.WiredService;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.concurrent.Executor;
 
 /**
  * TODO
@@ -21,48 +20,32 @@ import java.util.HashMap;
  */
 public class AsyncHandler implements InvocationHandler {
 
-    public static interface AsyncListener {
 
-        void onAsyncResult(Method method, Object result);
-
-        void onAsyncCodeResult(int code, Method method, Object result);
-
-        void onAsyncError(Method method);
-
-    }
+    private ResultQueue resultQueue;
 
     private static final String TAG = "AsyncHandler";
     private final Object origin;
     private Object proxy;
-    private final CommandService service;
+    private final Executor executor;
 
     private HashMap<Method, Integer> asyncMethods;
-    private AsyncListener listener;
 
     private final Handler hadler;
 
-    public static AsyncHandler wrapAll(Object origin, Class<?> type, WiredService instance) {
-        AsyncHandler handler = new AsyncHandler(origin, instance, AsyncType.ALL, type);
+    public static AsyncHandler wrapAll(Object origin, Class<?> type, Executor executor) {
+        AsyncHandler handler = new AsyncHandler(origin, executor, AsyncType.ALL, type);
         handler.proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
         return handler;
     }
 
-    public static AsyncHandler wrapMethods(Object origin, Class<?> type, WiredService instance) {
-        AsyncHandler handler = new AsyncHandler(origin, instance, AsyncType.METHODS, type);
+    public static AsyncHandler wrapMethods(Object origin, Class<?> type, Executor executor) {
+        AsyncHandler handler = new AsyncHandler(origin, executor, AsyncType.METHODS, type);
         handler.proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
         return handler;
-    }
-
-    public AsyncListener getListener() {
-        return listener;
     }
 
     public Object getProxy() {
         return proxy;
-    }
-
-    public void setListener(AsyncListener listener) {
-        this.listener = listener;
     }
 
     @Override
@@ -70,7 +53,7 @@ public class AsyncHandler implements InvocationHandler {
         if (asyncMethods.containsKey(method)) {
             // async call:
             final int code = asyncMethods.get(method);
-            service.execute(new Runnable() {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -79,10 +62,8 @@ public class AsyncHandler implements InvocationHandler {
                         deliverResult(code, result, method);
                     } catch (IllegalAccessException e) {
                         Log.e(TAG, "Can't access : ", e);
-                        notifyError(method);
                     } catch (InvocationTargetException e) {
                         Log.e(TAG, "Can't invoke : ", e);
-                        notifyError(method);
                     }
                 }
             });
@@ -93,31 +74,23 @@ public class AsyncHandler implements InvocationHandler {
         }
     }
 
-    private void notifyError(Method method) {
-        if (listener != null) {
-            listener.onAsyncError(method);
-        }
-    }
 
     private void deliverResult(final int code, final Object result, final Method method) {
-        // notify listener
-        if (listener != null) {
-            hadler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (code != 0) {
-                        listener.onAsyncCodeResult(code, method, result);
-                    } else {
-                        listener.onAsyncResult(method, result);
-                    }
+        hadler.post(new Runnable() {
+            @Override
+            public void run() {
+                MethodResult mr = new MethodResult(code, result, method);
+                if (resultQueue != null){
+                    resultQueue.postResult(mr);
                 }
-            });
-        }
+            }
+        });
     }
 
-    private AsyncHandler(Object origin, CommandService instance, AsyncType asyncType, Class<?> type) {
+
+    private AsyncHandler(Object origin, Executor executor, AsyncType asyncType, Class<?> type) {
         this.origin = origin;
-        this.service = instance;
+        this.executor = executor;
         Looper looper = Looper.myLooper();
         // FIXME handle if looper is null
         this.hadler = new Handler(looper);
@@ -139,5 +112,9 @@ public class AsyncHandler implements InvocationHandler {
                 asyncMethods.put(method, code);
             }
         }
+    }
+
+    public void setResultQueue(ResultQueue resultQueue) {
+        this.resultQueue = resultQueue;
     }
 }

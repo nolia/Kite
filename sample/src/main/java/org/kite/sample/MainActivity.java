@@ -2,8 +2,10 @@ package org.kite.sample;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +35,7 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         findViewById(R.id.btn_add_add_sync)
             .setOnClickListener(mButtonListener);
+        startService(new Intent(this, SampleService.class));
 
         wire = Wire.with(this).from(SampleService.class).to(this);
     }

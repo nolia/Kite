@@ -1,6 +1,5 @@
 package org.kite.wire;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
@@ -24,6 +23,7 @@ import java.util.concurrent.Executor;
  */
 public abstract class WiredService extends CommandService {
 
+    private static final String TAG = "WiredService";
     private final String serviceName;
     private WireBinder mBinder;
 
@@ -39,11 +39,6 @@ public abstract class WiredService extends CommandService {
     public WiredService(Executor executor, String name) {
         super(executor);
         this.serviceName = name;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
     }
 
     @Override
