@@ -3,7 +3,7 @@ package org.kite.async;
 import java.lang.reflect.Method;
 
 /**
- * TODO
+ * Utility immutable message-like class for delivering method invocation results.
  *
  * @author Nikolay Soroka
  */

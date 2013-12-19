@@ -29,7 +29,8 @@ import java.util.Set;
 public class Wire {
 
     /**
-     * TODO
+     * Key object to identify connections with service and
+     * target.
      *
      * @author Nikolay Soroka
      */
@@ -251,6 +252,7 @@ public class Wire {
             }
         }
     };
+
     private ConnectionPair connectionPair;
     private ServiceConnection connection = new ServiceConnection() {
         @Override

@@ -14,7 +14,12 @@ import java.lang.annotation.Target;
  * by the moment service is connected<br/>
  * If you mark method with it - it has to be getter-like, with no parameters.
  * </b>
+ * <p>Async:</p>
+ * By setting {@link #async()} type of exposing this method, you set
+ * the behaviour of calling interface, marked with this annotation. Examine {@link org.kite.async.AsyncType}
+ * for better understanding. Default async value is {@link org.kite.async.AsyncType#NONE}
  *
+ * @see org.kite.async.AsyncType
  * @see org.kite.annotations.Wired
  * @see org.kite.wire.WiredService
  * @author Nikolay Soroka
@@ -64,7 +69,7 @@ public @interface Provided {
 
     /**Marks that asynchronous calls
      * to this interface.
-     *
+     * @see org.kite.annotations.AsyncMethod
      */
     AsyncType async() default AsyncType.NONE;
 }

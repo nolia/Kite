@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 /**
- * TODO
+ * Queue for getting results of methods invocation.
  *
  * @author Nikolay Soroka
  */

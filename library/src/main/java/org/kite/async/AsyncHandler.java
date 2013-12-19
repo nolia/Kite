@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 /**
- * TODO
+ * A proxy class for invoking async methods.
  *
+ * @see org.kite.annotations.AsyncMethod
+ * @see org.kite.annotations.AsyncResult
  * @author Nikolay Soroka
  */
 public class AsyncHandler implements InvocationHandler {
@@ -30,24 +32,48 @@ public class AsyncHandler implements InvocationHandler {
 
     private HashMap<Method, Integer> asyncMethods;
 
-    private final Handler hadler;
+    private final Handler handler;
 
+    /**Creates new <code>AsyncHandler</code> that will invoke <b>all methods</b>
+     * of given <code>type</code> interface of <code>origin</code> object
+     * on given <code>executor</code>.
+     *
+     * @param origin original holder of interface
+     * @param type interface, which methods will be wrapped
+     * @param executor where original methods will be invoked
+     * @return new AsyncHandler
+     */
     public static AsyncHandler wrapAll(Object origin, Class<?> type, Executor executor) {
         AsyncHandler handler = new AsyncHandler(origin, executor, AsyncType.ALL, type);
         handler.proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
         return handler;
     }
 
+    /**Creates new <code>AsyncHandler</code> that will invoke <b>only methods
+     * marked with {@link org.kite.annotations.AsyncMethod} annotation</b>
+     * of given <code>type</code> interface of <code>origin</code> object
+     * on given <code>executor</code>.
+     *
+     * @param origin original holder of interface
+     * @param type interface, which methods will be wrapped
+     * @param executor where original methods will be invoked
+     * @return new AsyncHandler
+     */
     public static AsyncHandler wrapMethods(Object origin, Class<?> type, Executor executor) {
         AsyncHandler handler = new AsyncHandler(origin, executor, AsyncType.METHODS, type);
         handler.proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
         return handler;
     }
 
+    /**
+     *
+     * @return proxy instance which will catch methods invocation.
+     */
     public Object getProxy() {
         return proxy;
     }
 
+    /**{@inheritDoc} */
     @Override
     public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
         if (asyncMethods.containsKey(method)) {
@@ -74,17 +100,14 @@ public class AsyncHandler implements InvocationHandler {
         }
     }
 
-
-    private void deliverResult(final int code, final Object result, final Method method) {
-        hadler.post(new Runnable() {
-            @Override
-            public void run() {
-                MethodResult mr = new MethodResult(code, result, method);
-                if (resultQueue != null){
-                    resultQueue.postResult(mr);
-                }
-            }
-        });
+    /**Sets the result queue where methods results will be delivered.
+     * <b>Note, that setting null (which is default) will make this handler
+     * to not deliver results anywhere</b>
+     *
+     * @param resultQueue
+     */
+    public void setResultQueue(ResultQueue resultQueue) {
+        this.resultQueue = resultQueue;
     }
 
 
@@ -93,8 +116,20 @@ public class AsyncHandler implements InvocationHandler {
         this.executor = executor;
         Looper looper = Looper.myLooper();
         // FIXME handle if looper is null
-        this.hadler = new Handler(looper);
+        this.handler = new Handler(looper);
         gatherMethods(asyncType, type);
+    }
+
+    private void deliverResult(final int code, final Object result, final Method method) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                MethodResult mr = new MethodResult(code, result, method);
+                if (resultQueue != null) {
+                    resultQueue.postResult(mr);
+                }
+            }
+        });
     }
 
     private void gatherMethods(AsyncType asyncType, Class<?> type) {
@@ -112,9 +147,5 @@ public class AsyncHandler implements InvocationHandler {
                 asyncMethods.put(method, code);
             }
         }
-    }
-
-    public void setResultQueue(ResultQueue resultQueue) {
-        this.resultQueue = resultQueue;
     }
 }

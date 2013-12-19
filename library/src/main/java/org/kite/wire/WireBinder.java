@@ -10,7 +10,8 @@ import java.util.Map;
 
 /**
  * {@link Binder} implementation that holds reference to
- * enclosing {@link org.kite.wire.WiredService}.
+ * enclosing {@link org.kite.wire.WiredService}.<br/>
+ * It also holds result queue of async method invocation.
  *
  * @author Nikolay Soroka
  */
@@ -41,6 +42,14 @@ public class WireBinder extends Binder {
         return service;
     }
 
+    /**Return ResultQueue which async method results will be
+     * delivered to.
+     *
+     * @param key connection key between {@link org.kite.wire.WiredService} and
+     * target object
+     * @return ResultQueue which async method results will be
+     * delivered to.
+     */
     public ResultQueue getResultQueue(Wire.ConnectionPair key) {
         ResultQueue resultQueue = resultQueueMap.get(key);
         if (resultQueue == null){
