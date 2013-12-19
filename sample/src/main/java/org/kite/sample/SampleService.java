@@ -2,7 +2,10 @@ package org.kite.sample;
 
 
 import org.kite.annotations.Provided;
+import org.kite.async.AsyncType;
 import org.kite.wire.WiredService;
+
+import java.util.concurrent.Executors;
 
 /**
  * TODO
@@ -13,7 +16,7 @@ public class SampleService extends WiredService {
 
     public static final String ACTION_BIND_SUBSTRACTOR = "substractor";
     public SampleService() {
-        super("SampleService");
+        super(Executors.newSingleThreadExecutor(), "SampleService");
     }
 
     @Override
@@ -22,18 +25,29 @@ public class SampleService extends WiredService {
         calculator = new Calculator();
     }
 
-    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR)
+    @Provided
+    public CalcInterface getCalculator() {
+        return this.calculator;
+    }
+
+    @Provided(scope = Provided.Scope.ACTION, action = ACTION_BIND_SUBSTRACTOR,async = AsyncType.METHODS)
     public Substractor substractor = new Substractor() {
         @Override
         public int sub(int a, int b) {
             return a - b;
         }
+
+        @Override
+        public Integer asyncAdd(int a, int b) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return a + b;
+        }
     };
 
-    @Provided
-    public CalcInterface getCalculator() {
-        return this.calculator;
-    }
 
     private CalcInterface calculator;
 }

@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import org.kite.annotations.AsyncResult;
 import org.kite.annotations.Wired;
 import org.kite.wire.Wire;
 
@@ -19,11 +20,23 @@ public class CalcFragment extends Fragment {
     @Wired
     private Substractor substractor;
 
+    @AsyncResult(Substractor.ADD_RESULT)
+    public void onAdd(Integer result){
+        Toast.makeText(getActivity(), " 7 + 8 = " + result, Toast.LENGTH_SHORT).show();
+    }
+
     private View.OnClickListener btnListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            int two = substractor.sub(5, 3);
-            Toast.makeText(getActivity(), "5 - 3 = " + two, Toast.LENGTH_SHORT).show();
+            switch (v.getId()){
+                case R.id.btn_five_sub_three:
+                    int two = substractor.sub(5, 3);
+                    Toast.makeText(getActivity(), "5 - 3 = " + two, Toast.LENGTH_SHORT).show();
+                    break;
+                case R.id.btn_add_async:
+                    substractor.asyncAdd(7, 8);
+                    break;
+            }
         }
     };
 
@@ -37,8 +50,7 @@ public class CalcFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Intent serviceIntent = new Intent(getActivity(), SampleService.class)
-                .setAction(SampleService.ACTION_BIND_SUBSTRACTOR)
-                ;
+                .setAction(SampleService.ACTION_BIND_SUBSTRACTOR);
         wire = Wire.with(getActivity())
                 .from(serviceIntent)
                 .to(this);
@@ -66,6 +78,8 @@ public class CalcFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         view.findViewById(R.id.btn_five_sub_three)
+                .setOnClickListener(btnListener);
+        view.findViewById(R.id.btn_add_async)
                 .setOnClickListener(btnListener);
         super.onViewCreated(view, savedInstanceState);
     }

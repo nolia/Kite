@@ -12,9 +12,4 @@ public class Calculator implements CalcInterface {
         return first + second;
     }
 
-    @Override
-    public int addAsync(int first, int second, long delay) {
-        int res = first + second;
-        return res;
-    }
 }

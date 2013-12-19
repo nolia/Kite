@@ -4,12 +4,16 @@ import android.app.Service;
 import android.util.Log;
 
 import org.kite.annotations.Provided;
+import org.kite.async.AsyncHandler;
+import org.kite.async.AsyncType;
+import org.kite.async.ResultQueue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Encapsulates all provided fields and methods by {@link org.kite.wire.WiredService}
@@ -20,7 +24,6 @@ import java.util.Map;
 public class ServiceFacade {
 
     private static final String TAG = "ServiceFacade";
-
     /**Constructs new {@code ServiceFacade} upon given service, scope and intent action.
      *
      * @param service
@@ -56,23 +59,32 @@ public class ServiceFacade {
     /**Returns the provided value of given {@code type} from given
      * {@code instance} to use in injection.
      *
+     *
      * @param type
      * @param instance
+     * @param queue
      * @return the value of given {@code type} from given
      * {@code instance}.
      */
-    public Object getValue(Class<?> type, Object instance) {
+    public Object getValue(Class<?> type, Executor instance, ResultQueue queue) {
         Object value = null;
+        AsyncType async = null;
         try {
             if (methods.containsKey(type)) {
                 Method method = methods.get(type);
-
                 method.setAccessible(true);
+                async = method.getAnnotation(Provided.class).async();
                 value = method.invoke(instance);
             } else if (fields.containsKey(type)) {
                 Field field = fields.get(type);
                 field.setAccessible(true);
+                async = field.getAnnotation(Provided.class).async();
                 value = field.get(instance);
+            } else { // was not found
+                return null;
+            }
+            if ( !AsyncType.NONE.equals(async) ){
+                value = wrapAsync(value, async, type, instance, queue);
             }
         } catch (IllegalAccessException e) {
             Log.e(TAG, "Can't access ", e);
@@ -80,6 +92,24 @@ public class ServiceFacade {
             Log.e(TAG, "Can't invoke ", e);
         }
         return value;
+    }
+
+
+
+    private Object wrapAsync(Object value, AsyncType async, Class<?> type, Executor instance, ResultQueue queue) {
+        if (AsyncType.NONE.equals(async)){
+            return value;
+        }
+        Object result = value;
+        AsyncHandler handler = null;
+        if ( AsyncType.ALL.equals(async)){
+            handler = AsyncHandler.wrapAll(value, type, instance);
+        } else if (AsyncType.METHODS.equals(async)){
+            handler = AsyncHandler.wrapMethods(value, type, instance);
+        }
+        handler.setResultQueue(queue);
+        result = handler.getProxy();
+        return result;
     }
 
     private static boolean satisfies(Provided provided, Provided.Scope neededScope, String neededAction){

@@ -1,8 +1,11 @@
 package org.kite.wire;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+
+import org.kite.services.CommandService;
+
+import java.util.concurrent.Executor;
 
 /**WiredService is a provider of dependencies via {@link org.kite.annotations.Provided}
  * annotated methods and fields. All provided dependencies must be unique by class for
@@ -18,8 +21,9 @@ import android.os.IBinder;
  * @see org.kite.annotations.Wired
  * @author Nikolay Soroka
  */
-public abstract class WiredService extends Service {
+public abstract class WiredService extends CommandService {
 
+    private static final String TAG = "WiredService";
     private final String serviceName;
     private WireBinder mBinder;
 
@@ -32,9 +36,9 @@ public abstract class WiredService extends Service {
         this.serviceName = name;
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    public WiredService(Executor executor, String name) {
+        super(executor);
+        this.serviceName = name;
     }
 
     @Override

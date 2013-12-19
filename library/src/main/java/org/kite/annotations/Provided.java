@@ -1,5 +1,7 @@
 package org.kite.annotations;
 
+import org.kite.async.AsyncType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -12,7 +14,12 @@ import java.lang.annotation.Target;
  * by the moment service is connected<br/>
  * If you mark method with it - it has to be getter-like, with no parameters.
  * </b>
+ * <p>Async:</p>
+ * By setting {@link #async()} type of exposing this method, you set
+ * the behaviour of calling interface, marked with this annotation. Examine {@link org.kite.async.AsyncType}
+ * for better understanding. Default async value is {@link org.kite.async.AsyncType#NONE}
  *
+ * @see org.kite.async.AsyncType
  * @see org.kite.annotations.Wired
  * @see org.kite.wire.WiredService
  * @author Nikolay Soroka
@@ -48,40 +55,6 @@ public @interface Provided {
         ACTION
     }
 
-    /**Type of asynchronous invocation of interfaces,
-     * marked with {@link org.kite.annotations.Provided} annotation.
-     * <p>Can be:</p>
-     * <ul>
-     *     <li>{@link #NONE} - calls will be synchronous</li>
-     *     <li>{@link #ALL} - all methods will be called asynchronously</li>
-     *     <li>{@link #METHODS} - only methods marked with AsyncMethod
-     *     will be called asynchronously.
-     *     </li>
-     * </ul>
-     *
-     */
-    public static enum AsyncType {
-        /**No methods of this interface will be wrapped into
-         * async calls, whether or not given interface
-         * has methods with AsyncMethod annotation.
-         *
-         */
-        NONE,
-
-        /**Calls to every method of interface
-         * with this type of async invocation will be
-         * called asynchronously, whether or not they
-         * are marked with AsyncMethod annoation
-         */
-        ALL,
-
-        /**Only methods with marked with AsyncMethod
-         * annotation will be called on a separate thread.
-         *
-         */
-        METHODS
-    }
-
     /**Specify the scope of method or field.<br/>
      * Default is {@link org.kite.annotations.Provided.Scope#DEFAULT}
      *
@@ -96,7 +69,7 @@ public @interface Provided {
 
     /**Marks that asynchronous calls
      * to this interface.
-     *
+     * @see org.kite.annotations.AsyncMethod
      */
     AsyncType async() default AsyncType.NONE;
 }
